@@ -1,6 +1,30 @@
 // PARSENEWICKSTRING
 // Actually a wrapper for the true parser, to set up the environment and clear up afterwards
 
+function Node(){
+}
+
+Node.prototype.isRoot=function(){
+        return ((typeof this.parent) === 'undefined');
+}
+Node.prototype.isLeaf=function(){
+        return ((typeof this.children) === 'undefined' || this.children.length==0);
+}
+//convert to newick string
+Node.prototype.toString=function(){
+        print(this.name);
+        if (this.children){
+                childstr=("(" + this.children.map(function(s){return s.toString()}).join() + ")");
+                if (this.isRoot()){
+                        return childstr + ";";
+                }else {
+                        return childstr;
+                }
+        }else {
+                return this.name;
+        }
+}
+
 function parseNewickString(newick_string){
 	
 	//the 'temp' object holds the parser's working memory so we don't have to pass it around while doing recursion and calling other functions
@@ -63,7 +87,7 @@ function theDecider(nodes,newick_string){
 // Creates a new node, which will be a leaf node if we pass a name or an internal node if name is null.
 function newNode(name,nodes,newick_string){
 	
-	nodes[temp.index] = new Object(); //create a new node
+	nodes[temp.index] = new Node(); //create a new node
 	
 	//we do things differently if this is a leaf (i.e. named) node or a parent node.
 	if(name == null) {
@@ -90,3 +114,95 @@ function nodeLinker(nodes,newick_string){
 	}
 }
 
+
+//MYSTUFF
+
+function gettext(url) {
+    if (typeof readFile == "function") return readFile(url);  // Rhino
+    else if (typeof snarf == "function") return snarf(url); // Spidermonkey
+    else if (typeof read == "function") return read(url);   // V8
+    else throw new Error("No mechanism to load module text");
+}
+
+//ADDITIONS
+
+//Link up a tree's parent and children to actual nodes rather than numeric refs
+function fixNode(nodes,n){
+        if (n.children){
+                print(n.children);
+                print(n.children.map(function(x){return nodes[x].name}));
+                n.children=n.children.map(function(x){return nodes[x]});
+        }
+        if(n.parent){
+                n.parent=nodes[n.parent];
+        }
+        return n;
+}
+
+//return the first node in an array that matches isRoot()
+function getRoot(nodes){
+        for (i=0; i < nodes.length; i++){
+                node=nodes[i];
+                if(node.isRoot()){
+                        return node;
+                }
+        }
+}
+
+//enforce a bifurcating tree
+function enforceBi(node){
+        if (node.children){
+                node.children.map(enforceBi);
+        }
+        if (node.children){
+                if (node.children.length==2){
+                        return;
+                }else if (node.children.length==1){
+                        //remove ourself
+                        par = node.parent
+                        node.children[0].parent=par;
+                        for (i=0; i < par.children.length; i++){
+                                if (par.children[i]==this){
+                                        par.children[i]=node.children[0];
+                                }
+                        }
+                        return;
+                }else {
+                        while(node.children.length>2){
+                                newnode=new Node();
+                                newnode.children=node.children.slice(0,2);
+                                newnode.parent = node;
+                                node.children[1]=newnode; //overwrite child 1 and...
+                                node.children.shift(); // drop child 0
+                        }
+                        return;
+                }
+        }
+}
+
+//unroot a bifurcating tree 
+function unroot(root){
+        if (node.children[0].isLeaf){
+                newroot = node.children[1];
+                newchild = node.children[0];
+        }else {
+                newroot = node.children[0];
+                newchild = node.children[1];
+        }
+        newroot.children.push(newchild);
+        newchild.parent=newroot;
+        newroot.parent=undefined;
+        return newroot;
+}
+
+//convert array of nodes into tree structure
+function makeTree(nodes){
+        n = getRoot(nodes.map(function(x){return fixNode(nodes,x)}));
+        enforceBi(n);
+        return unroot(n);
+}
+
+newick_string="((A,B),(C,D),(E,F,G));"
+root=makeTree(parseNewickString(newick_string));
+
+print(root);
