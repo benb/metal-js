@@ -19,7 +19,7 @@ Node.prototype.splitsFor=function(gap_leaves){
         if (this.isRoot()){
                 return splitsForRoot(this,gap_leaves);
         }else {
-                throw "Only call Node#splitsFor on the root!";
+                throw new Error("Only call Node#splitsFor on the root!");
         }
 }
 
