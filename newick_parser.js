@@ -179,15 +179,6 @@ function nodeLinker(nodes,newick_string){
 }
 
 
-//MYSTUFF
-
-function gettext(url) {
-    if (typeof readFile == "function") return readFile(url);  // Rhino
-    else if (typeof snarf == "function") return snarf(url); // Spidermonkey
-    else if (typeof read == "function") return read(url);   // V8
-    else throw new Error("No mechanism to load module text");
-}
-
 //ADDITIONS
 
 //Link up a tree's parent and children to actual nodes rather than numeric refs
