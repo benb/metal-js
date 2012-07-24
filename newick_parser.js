@@ -1,6 +1,4 @@
-// PARSENEWICKSTRING
-// Actually a wrapper for the true parser, to set up the environment and clear up afterwards
-
+//methods on Nodes
 function Node(){
 }
 
@@ -10,9 +8,75 @@ Node.prototype.isRoot=function(){
 Node.prototype.isLeaf=function(){
         return ((typeof this.children) === 'undefined' || this.children.length==0);
 }
+Node.prototype.descendents=function(){
+        if (this.isLeaf()){
+                return [this.name];
+        }else {
+                return this.children.map(function(x){return x.descendents()}).reduce(function(x,y,a,b){return x.concat(y)})
+        }
+}
+Node.prototype.splitsFor=function(gap_leaves){
+        if (this.isRoot()){
+                return splitsForRoot(this,gap_leaves);
+        }else {
+                throw "Only call Node#splitsFor on the root!";
+        }
+}
+
+//Dollo parsimony
+//returns an object that maps from a leaf node name
+//to a node that represents the split where the 1<->0 transition responsible for
+//the leaf node state, iff the leaf node is in the 0 state.
+function splitsForRoot(root,gap_leaves){
+        ans=splitsFor(root,gap_leaves);
+        return _.reduce(ans,function(h,kv){h[kv[0]]=kv[1]; return h;},new Object()) 
+}
+//returns an array of format [[leaf_name,node],[leaf_name,node]..]
+//where leaf_name is one of the names specified in gap_leaves
+//and node is the ancestral location of the 1<->0 transition that 
+//left this node in state 0 inferred by Dollo parsimony.
+function splitsFor(node,gap_leaves){
+        if (node.isRoot()){
+                allgappedchildren = _.filter(node.children,function(x){return _.isEmpty(_.difference(x.descendents(),gap_leaves))});
+                if (allgappedchildren.length==2){
+                        //handle special case of root
+                        alldesc = _.chain(allgappedchildren).map(function(x){return x.descendents()}).flatten(true).value();
+                        left = _.chain(allgappedchildren).map(function(x){return x.descendents()}).flatten(true).map(function(x){return [x,alldesc]}).value();
+                        remaining = _.difference(node.children,allgappedchildren)[0];
+                        return left.concat(splitsFor(remaining,gap_leaves));
+                }
+
+        }
+        desc=node.descendents();
+        if (node.isLeaf()){
+                if (_.include(gap_leaves,desc[0])){
+                        return [[desc[0],desc]];
+                }else {
+                        return [];
+                }
+        }else {
+                if (_.isEmpty(_.difference(desc,gap_leaves))){
+                        //all my descendents are gaps
+                        return _.map(desc,function(x){return [x,desc]});
+                }else {
+                        //I have non-gap descendents, so go down the tree
+                        return _.chain(node.children).map(function(x){return splitsFor(x,gap_leaves)}).flatten(true).value();
+                }
+        }
+
+}
+
+
+
+// PARSENEWICKSTRING
+// Actually a wrapper for the true parser, to set up the environment and clear up afterwards
+
+
+Array.prototype.difference=function(other){
+        return this.filter(function(x){return other.indexOf(x)>-1})
+}
 //convert to newick string
 Node.prototype.toString=function(){
-        print(this.name);
         if (this.children){
                 childstr=("(" + this.children.map(function(s){return s.toString()}).join() + ")");
                 if (this.isRoot()){
@@ -129,8 +193,6 @@ function gettext(url) {
 //Link up a tree's parent and children to actual nodes rather than numeric refs
 function fixNode(nodes,n){
         if (n.children){
-                print(n.children);
-                print(n.children.map(function(x){return nodes[x].name}));
                 n.children=n.children.map(function(x){return nodes[x]});
         }
         if(n.parent){
@@ -157,6 +219,8 @@ function enforceBi(node){
         if (node.children){
                 if (node.children.length==2){
                         return;
+                }else if(node.children.length==3 && node.isRoot()){
+                        return;
                 }else if (node.children.length==1){
                         //remove ourself
                         par = node.parent
@@ -182,12 +246,18 @@ function enforceBi(node){
 
 //unroot a bifurcating tree 
 function unroot(root){
-        if (node.children[0].isLeaf){
-                newroot = node.children[1];
-                newchild = node.children[0];
+        if (root.children.length==3){
+                return root;
+        }
+        if (root.children.length!=2){
+                throw new Error("Tree is neither already rooted or bifurcating");
+        }
+        if (root.children[0].isLeaf){
+                newroot = root.children[1];
+                newchild = root.children[0];
         }else {
-                newroot = node.children[0];
-                newchild = node.children[1];
+                newroot = root.children[0];
+                newchild = root.children[1];
         }
         newroot.children.push(newchild);
         newchild.parent=newroot;
@@ -202,7 +272,3 @@ function makeTree(nodes){
         return unroot(n);
 }
 
-newick_string="((A,B),(C,D),(E,F,G));"
-root=makeTree(parseNewickString(newick_string));
-
-print(root);
