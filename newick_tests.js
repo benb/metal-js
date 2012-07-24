@@ -1,16 +1,16 @@
 test("parse tree",function(){
-        newick = "((((((((((E_Euggra,E_Trybru),E_Stylem),E_Acrros),((E_Nictab,E_Aratha),E_Phycap)),(E_Dicdis,(E_Porpur,E_Masbal))),(((E_Schpom,E_Podans),(E_Homsap,E_Caeele)),E_Cyapar)),(E_Plakno,E_Crypar)),E_Blahom),E_Enthis),A_Aerper,A_Metbar);"
-        leaves =  "E_Euggra,E_Trybru,E_Stylem,E_Acrros,E_Nictab,E_Aratha,E_Phycap,E_Dicdis,E_Porpur,E_Masbal,E_Schpom,E_Podans,E_Homsap,E_Caeele,E_Cyapar,E_Plakno,E_Crypar,E_Blahom,E_Enthis,A_Aerper,A_Metbar".split(",").sort();
-        root=makeTree(parseNewickString(newick));
+        var newick = "((((((((((E_Euggra,E_Trybru),E_Stylem),E_Acrros),((E_Nictab,E_Aratha),E_Phycap)),(E_Dicdis,(E_Porpur,E_Masbal))),(((E_Schpom,E_Podans),(E_Homsap,E_Caeele)),E_Cyapar)),(E_Plakno,E_Crypar)),E_Blahom),E_Enthis),A_Aerper,A_Metbar);"
+        var leaves =  "E_Euggra,E_Trybru,E_Stylem,E_Acrros,E_Nictab,E_Aratha,E_Phycap,E_Dicdis,E_Porpur,E_Masbal,E_Schpom,E_Podans,E_Homsap,E_Caeele,E_Cyapar,E_Plakno,E_Crypar,E_Blahom,E_Enthis,A_Aerper,A_Metbar".split(",").sort();
+        var root=makeTree(parseNewickString(newick));
         deepEqual(root.descendents().sort(),leaves,"has correct descendents");
 });
 
 
 test("dollop",function(){
-        newick = "((((((((((E_Euggra,E_Trybru),E_Stylem),E_Acrros),((E_Nictab,E_Aratha),E_Phycap)),(E_Dicdis,(E_Porpur,E_Masbal))),(((E_Schpom,E_Podans),(E_Homsap,E_Caeele)),E_Cyapar)),(E_Plakno,E_Crypar)),E_Blahom),E_Enthis),A_Aerper,A_Metbar);"
-        root=makeTree(parseNewickString(newick));
-        gap_leaves=["E_Cyapar","E_Caeele","E_Homsap","E_Podans","E_Schpom","E_Phycap","E_Euggra","E_Trybru"];
-        ans = root.splitsFor(gap_leaves);
+        var newick = "((((((((((E_Euggra,E_Trybru),E_Stylem),E_Acrros),((E_Nictab,E_Aratha),E_Phycap)),(E_Dicdis,(E_Porpur,E_Masbal))),(((E_Schpom,E_Podans),(E_Homsap,E_Caeele)),E_Cyapar)),(E_Plakno,E_Crypar)),E_Blahom),E_Enthis),A_Aerper,A_Metbar);"
+        var root=makeTree(parseNewickString(newick));
+        var gap_leaves=["E_Cyapar","E_Caeele","E_Homsap","E_Podans","E_Schpom","E_Phycap","E_Euggra","E_Trybru"];
+        var ans = root.splitsFor(gap_leaves);
 
         //Split of "E_Cyapar" should be equal to list
         deepEqual(ans["E_Cyapar"].sort(),["E_Cyapar","E_Caeele","E_Homsap","E_Podans","E_Schpom"].sort());

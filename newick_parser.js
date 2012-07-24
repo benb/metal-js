@@ -28,7 +28,7 @@ Node.prototype.splitsFor=function(gap_leaves){
 //to a node that represents the split where the 1<->0 transition responsible for
 //the leaf node state, iff the leaf node is in the 0 state.
 function splitsForRoot(root,gap_leaves){
-        ans=splitsFor(root,gap_leaves);
+        var ans=splitsFor(root,gap_leaves);
         return _.reduce(ans,function(h,kv){h[kv[0]]=kv[1]; return h;},new Object()) 
 }
 //returns an array of format [[leaf_name,node],[leaf_name,node]..]
@@ -37,7 +37,7 @@ function splitsForRoot(root,gap_leaves){
 //left this node in state 0 inferred by Dollo parsimony.
 function splitsFor(node,gap_leaves){
         if (node.isRoot()){
-                allgappedchildren = _.filter(node.children,function(x){return _.isEmpty(_.difference(x.descendents(),gap_leaves))});
+                var allgappedchildren = _.filter(node.children,function(x){return _.isEmpty(_.difference(x.descendents(),gap_leaves))});
                 if (allgappedchildren.length==2){
                         //handle special case of root
                         alldesc = _.chain(allgappedchildren).map(function(x){return x.descendents()}).flatten(true).value();
@@ -47,7 +47,7 @@ function splitsFor(node,gap_leaves){
                 }
 
         }
-        desc=node.descendents();
+        var desc=node.descendents();
         if (node.isLeaf()){
                 if (_.include(gap_leaves,desc[0])){
                         return [[desc[0],desc]];
@@ -203,8 +203,8 @@ function fixNode(nodes,n){
 
 //return the first node in an array that matches isRoot()
 function getRoot(nodes){
-        for (i=0; i < nodes.length; i++){
-                node=nodes[i];
+        for (var i=0; i < nodes.length; i++){
+                var node=nodes[i];
                 if(node.isRoot()){
                         return node;
                 }
@@ -225,7 +225,7 @@ function enforceBi(node){
                         //remove ourself
                         par = node.parent
                         node.children[0].parent=par;
-                        for (i=0; i < par.children.length; i++){
+                        for (var i=0; i < par.children.length; i++){
                                 if (par.children[i]==this){
                                         par.children[i]=node.children[0];
                                 }
@@ -233,7 +233,7 @@ function enforceBi(node){
                         return;
                 }else {
                         while(node.children.length>2){
-                                newnode=new Node();
+                                var newnode=new Node();
                                 newnode.children=node.children.slice(0,2);
                                 newnode.parent = node;
                                 node.children[1]=newnode; //overwrite child 1 and...
@@ -267,7 +267,7 @@ function unroot(root){
 
 //convert array of nodes into tree structure
 function makeTree(nodes){
-        n = getRoot(nodes.map(function(x){return fixNode(nodes,x)}));
+        var n = getRoot(nodes.map(function(x){return fixNode(nodes,x)}));
         enforceBi(n);
         return unroot(n);
 }
